@@ -2,9 +2,16 @@ package com.yong.dragonlog.controller;
 
 import com.yong.dragonlog.request.PostCreate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -21,7 +28,7 @@ public class PostController {
     //  react -> react + SSR = next
       // -> javascript + <-> API
     @PostMapping("/posts")
-    public String post(@RequestBody PostCreate params) throws Exception {
+    public Map<String, String> post(@RequestBody @Valid PostCreate params, BindingResult result) {
         //데이터를 검증하는 이유
         //1. client 개발자가 깜박할 수 있다. 실수로 값을 안 보낼 수 있다. (휴먼에러)
         //2. client bug로 값이 누락될 수 있다. (휴먼에러)
@@ -30,7 +37,10 @@ public class PostController {
         //5. 서버 개발자의 편안함을 위해서
         //6. 프로세스의 안정감을 줄 수 있다. 왜냐 검증된 데이터이기 때문에
         log.info("params={}", params.toString());
+        // {"title":"타이틀 값이 없습니다."}
 
+
+        /*
         String title = params.getTitle();
         if(title == null || title.equals("")){
             // 1. if문을 사용한 검증은 필드가 늘어나면 늘어날수록 힘들다 (노가다)
@@ -46,6 +56,18 @@ public class PostController {
         if(title == null || content.equals("")){
             //error
         }
-        return "Hello World";
+        이 예외처리같은 경우 post dto에서 @NotBlack annotation을 통해서 null, " ", "" 과 같은 예외를 처리하도록 하였다.
+ */
+        if(result.hasErrors()){
+            List<FieldError> filedErrors = result.getFieldErrors();
+            FieldError firstFieldError = filedErrors.get(0);
+            String fieldName = firstFieldError.getField(); // title
+            String errorMessage = firstFieldError.getDefaultMessage(); // 에러메시지
+
+            Map<String, String> error = new HashMap<>();
+            error.put(fieldName, errorMessage);
+            return error;
+        }
+        return Map.of();
     }
 }
