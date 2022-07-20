@@ -28,7 +28,7 @@ public class PostController {
     //  react -> react + SSR = next
       // -> javascript + <-> API
     @PostMapping("/posts")
-    public Map<String, String> post(@RequestBody @Valid PostCreate params, BindingResult result) {
+    public Map<String, String> post(@RequestBody @Valid PostCreate params) {
         //데이터를 검증하는 이유
         //1. client 개발자가 깜박할 수 있다. 실수로 값을 안 보낼 수 있다. (휴먼에러)
         //2. client bug로 값이 누락될 수 있다. (휴먼에러)
@@ -36,9 +36,17 @@ public class PostController {
         //4. DB에 값을 저장할 때 의도치 않은 오류가 발생할 수 있다.
         //5. 서버 개발자의 편안함을 위해서
         //6. 프로세스의 안정감을 줄 수 있다. 왜냐 검증된 데이터이기 때문에
-        log.info("params={}", params.toString());
+
+
         // {"title":"타이틀 값이 없습니다."}
 
+        // 응답값에 HashMap -> 응답 클래스를 만들어주는게 좋다.
+        // 여러개의 에러처리가 힘들다.
+        // 세 번 이상의 반복적인 작업은 피해야한다.
+                // - 코드 && 개발에 관한 모든 것
+                    // - 자동화 고려
+
+        // 위와 같은 부분을 @ControllAdvise를 통해 개선하고자 한다.
 
         /*
         String title = params.getTitle();
@@ -58,16 +66,6 @@ public class PostController {
         }
         이 예외처리같은 경우 post dto에서 @NotBlack annotation을 통해서 null, " ", "" 과 같은 예외를 처리하도록 하였다.
  */
-        if(result.hasErrors()){
-            List<FieldError> filedErrors = result.getFieldErrors();
-            FieldError firstFieldError = filedErrors.get(0);
-            String fieldName = firstFieldError.getField(); // title
-            String errorMessage = firstFieldError.getDefaultMessage(); // 에러메시지
-
-            Map<String, String> error = new HashMap<>();
-            error.put(fieldName, errorMessage);
-            return error;
-        }
         return Map.of();
     }
 }
